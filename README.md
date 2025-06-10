@@ -124,7 +124,7 @@ sequenceDiagram
         alt 캠페인 시작일시 이전
             C-->>C: 트랜잭션 롤백
             C-->>+B: (nil, error) 반환
-            B-->>A: "캠페인이 아직 시작되지 않음" 반환 (status: 422)
+            B-->>A: "캠페인이 아직 시작되지 않음" 반환 (status: 409)
             deactivate B
         end
         C-->>C: 잔여 쿠폰 수 확인
