@@ -1,7 +1,7 @@
 package campaign_get
 
 type Input struct {
-	CampaignID int64 `json:"campaign_id"`
+	CampaignID int32 `json:"campaign_id"`
 }
 
 type Output struct {
