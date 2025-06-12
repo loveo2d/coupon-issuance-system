@@ -209,7 +209,7 @@ erDiagram
     }
 
     campaign ||--o{ coupon: "캠페인은 쿠폰이 전혀 없거나 1개 이상의 쿠폰을 소유한다."
-    campaign ||--|| schedule: "캠페인은 자신의 시작일시를 지닌 하나의 스케줄을 소유한다."
+    campaign ||--|| campaign_schedule: "캠페인은 자신의 시작일시를 지닌 하나의 스케줄을 소유한다."
 ```
 
 ## 4. 진행 경과
