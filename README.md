@@ -37,9 +37,9 @@
 기본적으로 클린 아키텍처를 기반으로 작성했으며, `DDD`에서 권장하는 컨벤션에 따라 아래와 같은 레이어를 가집니다.
 
 - **domain**: 비즈니스 규칙과 데이터 모델과 연관된 엔티티, 값 객체, 열거형, 리포지토리, 도메인 서비스 등이 여기에 위치합니다.
-- **application**: 비즈니스 로직을 담당하는 유스케이스가 여기에 위치합니다.
-- **infra**: 서드파티 등 서비스와 느슨한 연결점을 가진 인프라스트럭처가 여기에 위치합니다.
-- **interfaces**: 외부와 상호작용하는 엔드포인트가 여기에 위치합니다.
+- **application (app)**: 비즈니스 로직을 담당하는 유스케이스가 여기에 위치합니다.
+- **infrastructure (infra)**: 서드파티 등 서비스와 느슨한 연결점을 가진 인프라스트럭처가 여기에 위치합니다.
+- **interfaces (api)**: 외부와 상호작용하는 엔드포인트가 여기에 위치합니다.
 
 ### 3.2. 시퀀스 다이어그램
 ```mermaid
@@ -201,10 +201,11 @@ erDiagram
         int campaign_id fk
     }
 
-    schedule {
+    campaign_schedule {
         int id pk
         int campaign_id fk,uk
-        varchar(10) status "PENDING, RUNNING, DONE"
+        varchar(10) status "PENDING, ACTIVATED, DONE"
+        timestamp issued_at
     }
 
     campaign ||--o{ coupon: "캠페인은 쿠폰이 전혀 없거나 1개 이상의 쿠폰을 소유한다."
