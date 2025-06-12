@@ -219,6 +219,25 @@ erDiagram
 ### 4.1. `connectrpc` 명세 정의하기
 `connectrpc`를 사용하기에 앞서, 자료를 찾으면서 `.proto` 파일을 통해 프로토콜 명세를 생성해야 한다는 사실을 이미 알고 있다. 하지만 이걸 어떻게 생성하고 사용하는지 문법이나 작성 방식에 대해서는 다소 생소한데, 이 부분에 대한 명세 정의를 시작하려고 한다.
 
+#### 4.1.1. `.proto` 파일 정의하기
+먼저 `.proto` 파일의 문법에 따라 각 파일들을 정의하기 위해 파일을 생성했다. 작성 과정에서 campaign의 begin_at과 같은 날짜 포맷은 어떻게 관리하는지 궁금했고, 다음과 같은 선택지들이 있었다.
+
+1. google.protobuf.Timestamp
+2. iso-8601 포맷 string
+3. unix timestamp를 담는 int64
+
+여기서는 1번 선택지가 코드 수준에서도 VO로 관리할 수 있을 것 같기도 했고, 간단하게 `.proto`파일 상단에 `import "google/protobuf/timestamp.proto";` 한 줄만 추가하면 쓸 수 있다고 하니 가볍게 사용해 보기로 했다.
+
+작성이 완료됐고, 각 파일의 위치를 유스케이스와 맞춰 구성된 파일트리는 아래와 같다.
+```
+proto
+├── campaign
+│   ├── create.proto
+│   └── get.proto
+└── coupon
+    └── issue.proto
+```
+
 ## 5. 실행 방법
 
 ## 6. 향후 개선 과제
