@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package rpc_campaign;
+
+option go_package = "github.com/loveo2d/CouponIssuanceSystem/internal/api/proto/campaign";
+
+import "google/protobuf/timestamp.proto";
+
+message CreateCampaignRequest {
+    string title = 1;
+    int32 coupon_remains = 2;
+    google.protobuf.Timestamp begin_at = 3;
+}
+
+message CreateCampaignResponse {
+    int32 campaign_id = 1;
+    string title = 2;
+    int32 coupon_remains = 3;
+    google.protobuf.Timestamp begin_at = 4;
+}
+
+service CreateCampaignService {
+    rpc CreateCampaign(CreateCampaignRequest) returns (CreateCampaignResponse) {}
+}

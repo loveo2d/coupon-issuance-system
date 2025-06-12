@@ -216,6 +216,60 @@ erDiagram
 - 개발 방향은 탑다운(엔드포인트 종단점 부터 영속성 구체화 까지)으로 진행됩니다.
 - Git branch 구성은 기능 단위 `work` 브랜치 밑에 `feat` 브랜치로 세부 구현을 둡니다.
 
+### 4.1. `connectrpc` 명세 정의하기
+`connectrpc`를 사용하기에 앞서, 자료를 찾으면서 `.proto` 파일을 통해 프로토콜 명세를 생성해야 한다는 사실을 이미 알고 있다. 하지만 이걸 어떻게 생성하고 사용하는지 문법이나 작성 방식에 대해서는 다소 생소한데, 이 부분에 대한 명세 정의를 시작하려고 한다.
+
+#### 4.1.1. `.proto` 파일 정의하기
+먼저 `.proto` 파일의 문법에 따라 각 파일들을 정의하기 위해 파일을 생성했다. 작성 과정에서 campaign의 begin_at과 같은 날짜 포맷은 어떻게 관리하는지 궁금했고, 다음과 같은 선택지들이 있었다.
+
+1. google.protobuf.Timestamp
+2. iso-8601 포맷 string
+3. unix timestamp를 담는 int64
+
+여기서는 1번 선택지가 코드 수준에서도 VO로 관리할 수 있을 것 같기도 했고, 간단하게 `.proto`파일 상단에 `import "google/protobuf/timestamp.proto";` 한 줄만 추가하면 쓸 수 있다고 하니 가볍게 사용해 보기로 했다.
+
+작성이 완료됐고, 각 파일의 위치를 유스케이스와 맞춰 구성된 파일트리는 아래와 같다.
+```
+proto
+├── campaign
+│   ├── create.proto
+│   └── get.proto
+└── coupon
+    └── issue.proto
+```
+
+#### 4.1.2. `.proto` 파일 컴파일하기
+실제 프로젝트에서 사용할 수 있는 소스코드를 생성하려면 위 단락에서 생성한 `.proto` 파일을 기반으로 컴파일을 해야한다. 찾아 보니 `protoc`와 `buf`라는 컴파일러가 있었고, `protoc`는 컴파일 기능에 집중된 반면 `buf`는 `protoc`를 기반으로 프로토콜 종속성 관리까지 도와주는 진보된 도구였다. 그래서 `buf`를 사용하기로 했는데, `buf`는 추가로 설정 파일을 프로젝트에 포함할 필요가 있다고 한다. 이 파일을 생성하려면 먼저 `buf`를 설치하고, `buf config init`을 실행하면 `buf` 환경이 초기화된다. 자, 그럼 `buf generate`를 실행해 보자.
+
+> Failure: read buf.gen.yaml: file does not exist
+
+아무래도 설정 파일로 `buf.gen.yaml` 파일을 추가해야 하는 모양이다. 어디에도 이걸 자동으로 생성해주는 명령어를 찾을 수 없어서 검색을 해보니 이 파일은 생성 규칙이나 플러그인을 설정하는 파일이라 규칙도 사용하는 플러그인도 정해진 답이 없는 이상은 수기로 작성해야 하는 게 납득이 갔다. 자료를 찾아 기능이 어울리는 플러그인과 컴파일된 소스파일이 출력되는 폴더를 지정하려면 `out` 속성에 경로를 지정해야 한다는 내용을 보며 파일을 직접 생성했고, 분명 위에서 생성된 `buf.yaml`은 (version: v2)인데 검색으로 나온 `buf.gen.yaml`에 대한 예제는 v1으로 구성되어 있었고, 나는 이 두 파일의 버전을 v2로 맞추고 싶어서 [Buf 공식 문서](https://buf.build/docs/configuration/v2/buf-gen-yaml/)를 참조해서 작성해봤다.
+
+v2로만 변경하면 `buf generate` 명령어 사용 시 plugins.plugin 속성에서 아래와 같은 오류가 나는데
+
+>Failure: decode buf.gen.yaml: invalid as version v2: could not unmarshal as YAML: yaml: unmarshal errors: \
+&nbsp; line 3: field plugin not found in type bufconfig.externalGeneratePluginConfigV2 \
+&nbsp; line 7: field plugin not found in type bufconfig.externalGeneratePluginConfigV2
+
+공식 문서에 따르면 plugins.plugin 속성은 v2 버전에서 더 이상 사용되지 않고 plugins.remote로 변경해 주면 끝이다. 그럼 이제 진짜로 `buf generate` 출력 결과를 기대해 보기로 했다.
+
+```
+internal/api/proto
+├── campaign
+│   ├── campaignconnect
+│   │   ├── create.connect.go
+│   │   └── get.connect.go
+│   ├── create.pb.go
+│   └── get.pb.go
+└── coupon
+    ├── couponconnect
+    │   └── issue.connect.go
+    └── issue.pb.go
+```
+
+이렇게 성공적으로 `.proto` 명세에 대응하는 파일들이 생성됐다.
+
+
 ## 5. 실행 방법
 
 ## 6. 향후 개선 과제
