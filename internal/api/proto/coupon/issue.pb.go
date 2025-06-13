@@ -149,9 +149,7 @@ const file_proto_coupon_issue_proto_rawDesc = "" +
 	"campaignId\x12\x1f\n" +
 	"\vcoupon_code\x18\x03 \x01(\tR\n" +
 	"couponCode\x127\n" +
-	"\tissued_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bissuedAt2f\n" +
-	"\x12IssueCouponService\x12P\n" +
-	"\vIssueCoupon\x12\x1e.rpc_coupon.IssueCouponRequest\x1a\x1f.rpc_coupon.IssueCouponResponse\"\x00BCZAgithub.com/loveo2d/CouponIssuanceSystem/internal/api/proto/couponb\x06proto3"
+	"\tissued_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bissuedAtBCZAgithub.com/loveo2d/CouponIssuanceSystem/internal/api/proto/couponb\x06proto3"
 
 var (
 	file_proto_coupon_issue_proto_rawDescOnce sync.Once
@@ -173,10 +171,8 @@ var file_proto_coupon_issue_proto_goTypes = []any{
 }
 var file_proto_coupon_issue_proto_depIdxs = []int32{
 	2, // 0: rpc_coupon.IssueCouponResponse.issued_at:type_name -> google.protobuf.Timestamp
-	0, // 1: rpc_coupon.IssueCouponService.IssueCoupon:input_type -> rpc_coupon.IssueCouponRequest
-	1, // 2: rpc_coupon.IssueCouponService.IssueCoupon:output_type -> rpc_coupon.IssueCouponResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -195,7 +191,7 @@ func file_proto_coupon_issue_proto_init() {
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_proto_coupon_issue_proto_goTypes,
 		DependencyIndexes: file_proto_coupon_issue_proto_depIdxs,

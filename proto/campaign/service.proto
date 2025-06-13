@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package rpc_campaign;
+
+option go_package = "github.com/loveo2d/CouponIssuanceSystem/internal/api/proto/campaign";
+
+import "proto/campaign/create.proto";
+import "proto/campaign/get.proto";
+
+service CampaignService {
+    rpc CreateCampaign(CreateCampaignRequest) returns (CreateCampaignResponse);
+    rpc GetCampaign(GetCampaignRequest) returns (GetCampaignResponse);
+}

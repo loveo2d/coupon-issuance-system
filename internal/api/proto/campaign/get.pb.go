@@ -147,9 +147,7 @@ const file_proto_campaign_get_proto_rawDesc = "" +
 	"campaignId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12%\n" +
 	"\x0ecoupon_remains\x18\x03 \x01(\x05R\rcouponRemains\x125\n" +
-	"\bbegin_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\abeginAt2j\n" +
-	"\x12GetCampaignService\x12T\n" +
-	"\vGetCampaign\x12 .rpc_campaign.GetCampaignRequest\x1a!.rpc_campaign.GetCampaignResponse\"\x00BEZCgithub.com/loveo2d/CouponIssuanceSystem/internal/api/proto/campaignb\x06proto3"
+	"\bbegin_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\abeginAtBEZCgithub.com/loveo2d/CouponIssuanceSystem/internal/api/proto/campaignb\x06proto3"
 
 var (
 	file_proto_campaign_get_proto_rawDescOnce sync.Once
@@ -171,10 +169,8 @@ var file_proto_campaign_get_proto_goTypes = []any{
 }
 var file_proto_campaign_get_proto_depIdxs = []int32{
 	2, // 0: rpc_campaign.GetCampaignResponse.begin_at:type_name -> google.protobuf.Timestamp
-	0, // 1: rpc_campaign.GetCampaignService.GetCampaign:input_type -> rpc_campaign.GetCampaignRequest
-	1, // 2: rpc_campaign.GetCampaignService.GetCampaign:output_type -> rpc_campaign.GetCampaignResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -193,7 +189,7 @@ func file_proto_campaign_get_proto_init() {
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_proto_campaign_get_proto_goTypes,
 		DependencyIndexes: file_proto_campaign_get_proto_depIdxs,
