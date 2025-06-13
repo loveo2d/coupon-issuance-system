@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package rpc_coupon;
+
+option go_package = "github.com/loveo2d/CouponIssuanceSystem/internal/api/proto/coupon";
+
+import "proto/coupon/issue.proto";
+
+service CouponService {
+    rpc IssueCoupon(IssueCouponRequest) returns (IssueCouponResponse);
+}

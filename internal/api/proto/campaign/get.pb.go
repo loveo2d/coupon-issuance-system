@@ -70,7 +70,7 @@ type GetCampaignResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CampaignId    int32                  `protobuf:"varint,1,opt,name=campaign_id,json=campaignId,proto3" json:"campaign_id,omitempty"`
 	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	CouponRemains int32                  `protobuf:"varint,3,opt,name=coupon_remains,json=couponRemains,proto3" json:"coupon_remains,omitempty"`
+	CouponRemains *int32                 `protobuf:"varint,3,opt,name=coupon_remains,json=couponRemains,proto3,oneof" json:"coupon_remains,omitempty"`
 	BeginAt       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=begin_at,json=beginAt,proto3" json:"begin_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -121,8 +121,8 @@ func (x *GetCampaignResponse) GetTitle() string {
 }
 
 func (x *GetCampaignResponse) GetCouponRemains() int32 {
-	if x != nil {
-		return x.CouponRemains
+	if x != nil && x.CouponRemains != nil {
+		return *x.CouponRemains
 	}
 	return 0
 }
@@ -141,15 +141,14 @@ const file_proto_campaign_get_proto_rawDesc = "" +
 	"\x18proto/campaign/get.proto\x12\frpc_campaign\x1a\x1fgoogle/protobuf/timestamp.proto\"5\n" +
 	"\x12GetCampaignRequest\x12\x1f\n" +
 	"\vcampaign_id\x18\x01 \x01(\x05R\n" +
-	"campaignId\"\xaa\x01\n" +
+	"campaignId\"\xc2\x01\n" +
 	"\x13GetCampaignResponse\x12\x1f\n" +
 	"\vcampaign_id\x18\x01 \x01(\x05R\n" +
 	"campaignId\x12\x14\n" +
-	"\x05title\x18\x02 \x01(\tR\x05title\x12%\n" +
-	"\x0ecoupon_remains\x18\x03 \x01(\x05R\rcouponRemains\x125\n" +
-	"\bbegin_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\abeginAt2j\n" +
-	"\x12GetCampaignService\x12T\n" +
-	"\vGetCampaign\x12 .rpc_campaign.GetCampaignRequest\x1a!.rpc_campaign.GetCampaignResponse\"\x00BEZCgithub.com/loveo2d/CouponIssuanceSystem/internal/api/proto/campaignb\x06proto3"
+	"\x05title\x18\x02 \x01(\tR\x05title\x12*\n" +
+	"\x0ecoupon_remains\x18\x03 \x01(\x05H\x00R\rcouponRemains\x88\x01\x01\x125\n" +
+	"\bbegin_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\abeginAtB\x11\n" +
+	"\x0f_coupon_remainsBEZCgithub.com/loveo2d/CouponIssuanceSystem/internal/api/proto/campaignb\x06proto3"
 
 var (
 	file_proto_campaign_get_proto_rawDescOnce sync.Once
@@ -171,10 +170,8 @@ var file_proto_campaign_get_proto_goTypes = []any{
 }
 var file_proto_campaign_get_proto_depIdxs = []int32{
 	2, // 0: rpc_campaign.GetCampaignResponse.begin_at:type_name -> google.protobuf.Timestamp
-	0, // 1: rpc_campaign.GetCampaignService.GetCampaign:input_type -> rpc_campaign.GetCampaignRequest
-	1, // 2: rpc_campaign.GetCampaignService.GetCampaign:output_type -> rpc_campaign.GetCampaignResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -185,6 +182,7 @@ func file_proto_campaign_get_proto_init() {
 	if File_proto_campaign_get_proto != nil {
 		return
 	}
+	file_proto_campaign_get_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
@@ -193,7 +191,7 @@ func file_proto_campaign_get_proto_init() {
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_proto_campaign_get_proto_goTypes,
 		DependencyIndexes: file_proto_campaign_get_proto_depIdxs,

@@ -272,6 +272,60 @@ internal/api/proto
 ### 4.2. 엔드포인트 구현하기
 `connectrpc`를 사용하기 위한 사전 명세와 컴파일된 명세 파일들 까지 준비됐으니 이제 엔드포인트를 구현할 차례다. 아무래도 일반적인 `REST API` 엔드포인트와는 같은 프로토콜을 쓸 수 있게 지원한다 하더라도 구현 자체는 결이 다를 것으로 예상된다.
 
+#### 4.2.1. `connectrpc` proto 정의 handler에 매핑하기
+`buf`가 편하게 명세와 Request/Response에 해당하는 DTO까지 구성해 줬으니 DTO를 구성하기 위해 만든 `rpc/{domain}/schemas.go` 파일은 모두 삭제하고, 명세에 맞게 작성만 하면 되는데 사소한 문제가 생겼다. proto 파일은 서비스 핸들러를 자동으로 생성해 주는데, 이 서비스 핸들러 정의를 `.proto` 파일 단위로 작성하니 서비스 핸들러가 도메인 단위가 아니라 종단점 단위로 분리되어버린 거다. 따라서 서비스 핸들러를 하나로 합칠 방법이 필요했는데, `.proto` 파일은 작성된 내용을 다른 `.proto` 파일로 import가 가능했다. 이 방법을 이용해서 서비스에 관련된 `.proto` 파일을 별도의 파일로 분리했다.
+
+```
+proto
+├── campaign
+│   ├── create.proto
+│   ├── get.proto
+│   └── service.proto
+└── coupon
+    ├── issue.proto
+    └── service.proto
+```
+coupon 도메인의 issue.proto는 그대로 사용해도 문제는 없지만 맥락상 `.proto`파일 관리의 일관성 차원에서 분리했다. 이후 rpc/main.go 에서 이 핸들러 패키지에서 New() 메소드를 통해 `connectrpc` 핸들러를 가져오기만 하면 된다. 그럼 서비스를 `go run cmd/rpc/main.go` 명령어로 실행하고 요청을 보내보자.
+
+> 2025/06/13 14:18:44 Starting server on port 8000 \
+Routing services to: \
+\-  /rpc_campaign.CampaignService/ \
+\-  /rpc_coupon.CouponService/
+
+여기서 각 도메인의 루트경로를 알 수 있고, 해당 도메인의 기능들은 `.proto`에서 정의한 명칭을 그대로 사용하면 된다. 그럼 모든 엔드포인트를 나열하면 아래와 같다.
+
+- /rpc_campaign.CampaignService/CreateCampaign
+- /rpc_campaign.CampaignService/GetCampaign
+- /rpc_coupon.CouponService/IssueCoupon
+
+라우팅에 성공한 것 같으니 브라우저에서 한 번 접속해 보기로 했다. `http://127.0.0.1:8000/rpc_campaign.CampaignService/CreateCampaign` 페이지에 접속해 봤고, 결과는 `HTTP ERROR 405` 라는 에러 메시지였다. 웹브라우저로 접근 시 Get 메소드로 접근하는데, 이 Get 메소드는 제공되지 않는다는 의미일 것이다. 찾아 보니, `connectrpc`는 POST 요청만 받아서 처리한다고 한다. curl로 테스트 해보기로 했다.
+
+> ✗ curl -X POST  -H "Content-Type: application/json" -d {} http://127.0.0.1:8000/rpc_campaign.CampaignService/CreateCampaign \
+{"beginAt":"2025-06-13T05:22:55.182708Z"}
+
+이상했다. 난 분명 `{CampaignId: 0, Title: "", CouponRemains: 0, BeginAt: timestamppb.Now()}` 로 잘 설정했는데 `beginAt`만 반환되는 게 아닌가? 하지만 대충 봐도 표현되지 않은 값들은 하나같이 의미있는 값을 갖지 않는 필드들이었다. 엔드포인트 더미 데이터에 숫자형은 0, 문자형은 ""(빈 문자열)을 설정했는데, 이것들은 보통 데이터가 없다고 볼 수 있는 항목들이다. 제대로 데이터를 확인하려면 의미있는 값을 부여해야 할 것으로 보여서 해당 값들을 수정 후 다시 요청했다.
+
+> ✗ curl -X POST  -H "Content-Type: application/json" -d {} http://127.0.0.1:8000/rpc_campaign.CampaignService/CreateCampaign \
+{"campaignId":1, "title":"캠페인 테스트", "couponRemains":10, "beginAt":"2025-06-13T05:25:50.944314Z"}
+
+이제는 잘 나왔다. 하지만 `CreateCampaign`에선 반환 시 0이나 빈 문자열이 표현되는 케이스가 없겠지만 `GetCampaign`의 경우 쿠폰이 모두 소진될 경우 0이 반환될 수 있다. 위에서 찾은 문제에 대한 궁금증과 함께 이 부분에 대한 해결책을 찾아야 했다. 그래서 문서를 참조해 보니, protobuf의 기본 동작으로 `optional` 키워드가 설정되지 않은 구조체 필드는 0이나 "" 과 같은 빈 데이터로 간주되는 정보를 직렬화 시 삭제한다고 한다. 그럼 빈 값으로 간주될 수 있는 값들에 대해 optional을 설정해야 하니 proto 파일을 다시 수정해야 한다.
+
+```proto
+message GetCampaignResponse {
+    int32 campaign_id = 1;
+    string title = 2;
+    optional int32 coupon_remains = 3;
+    google.protobuf.Timestamp begin_at = 4;
+}
+```
+
+그럼 다음과 같이 정상적으로 0을 값으로 가진 필드도 직렬화 시 삭제되지 않고 남아있다.
+
+> ✗ curl -X POST  -H "Content-Type: application/json" -d {} http://127.0.0.1:8000/rpc_campaign.CampaignService/GetCampaign \
+{"campaignId":1,"title":"캠페인 테스트","couponRemains":0,"beginAt":"2025-06-13T05:35:14.725740Z"}
+
+여담이지만 기존에 사용하던 하이레벨 언어에서는 레퍼런스나 포인터 같은 개념이 없었는데, 위의 CouponRemains에 optional을 추가하자마자 요구 타입이 int32가 아닌 *int32가 되었다. 왜 이런 변화가 생겼는지 생각해 봤는데, 보통 매개변수로 값을 넘기면 Go와 같은 로우레벨 수준을 제어할 수 있는 언어는 주소가 아닌 값을 복제하는 것으로 알고 있다. 따라서 int32라는 엄격한 타입을 준수해야 하는데, 아예 데이터와 타입이 없는 nil 같은 경우 int32로 복제할 수 없기 때문에 댕글링 포인터로서의 nil도 표현할 수 있도록 레퍼런스를 넘기도록 설계된게 아닐까 싶었다.
+
 ## 5. 실행 방법
 
 ## 6. 향후 개선 과제
