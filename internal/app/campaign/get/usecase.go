@@ -1,9 +1,12 @@
 package campaign_get
 
 import (
+	"context"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/loveo2d/CouponIssuanceSystem/internal/domain/campaign"
 )
 
 type Input struct {
@@ -27,6 +30,29 @@ func New(db *pgxpool.Pool) *GetCampaignUC {
 	}
 }
 
-func (uc *GetCampaignUC) Execute(input Input) (*Output, error) {
-	return &Output{}, nil
+func (uc *GetCampaignUC) Execute(input Input) (output *Output, err error) {
+	tx, err := uc.db.BeginTx(context.Background(), pgx.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(context.Background())
+		}
+	}()
+
+	campaignRepo := campaign.NewCampaignRepository(tx)
+
+	campaignModel, errCampaign := campaignRepo.Get(input.CampaignId)
+	if errCampaign != nil {
+		return nil, errCampaign
+	}
+
+	output = &Output{
+		CampaignId:    campaignModel.ID,
+		Title:         campaignModel.Title,
+		CouponRemains: &campaignModel.CouponRemains,
+		BeginAt:       campaignModel.BeginAt,
+	}
+	return output, nil
 }
