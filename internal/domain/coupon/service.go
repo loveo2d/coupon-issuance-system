@@ -1,6 +1,8 @@
 package coupon
 
 import (
+	"context"
+
 	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
 )
 
@@ -12,6 +14,6 @@ func NewCouponService(db db.DB) *CouponService {
 	return &CouponService{db: db}
 }
 
-func (s *CouponService) IssueCoupon(campaignId int32) (*Coupon, error) {
+func (s *CouponService) IssueCoupon(ctx context.Context, campaignId int32) (*Coupon, error) {
 	return nil, nil
 }

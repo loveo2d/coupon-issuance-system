@@ -23,7 +23,7 @@ func New(db *pgxpool.Pool) (string, http.Handler) {
 
 func (s *couponServer) IssueCoupon(ctx context.Context, req *connect.Request[couponpb.IssueCouponRequest]) (*connect.Response[couponpb.IssueCouponResponse], error) {
 	uc := coupon_issue.New(s.db)
-	output, err := uc.Execute(coupon_issue.Input{
+	output, err := uc.Execute(ctx, coupon_issue.Input{
 		CampaignId: req.Msg.CampaignId,
 	})
 	if err != nil {

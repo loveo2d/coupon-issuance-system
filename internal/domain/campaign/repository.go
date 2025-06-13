@@ -1,6 +1,8 @@
 package campaign
 
 import (
+	"context"
+
 	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
 )
 
@@ -12,23 +14,23 @@ func NewCampaignRepository(db db.DB) *CampaignRepository {
 	return &CampaignRepository{db: db}
 }
 
-func (r *CampaignRepository) Create(campaign *Campaign) (*Campaign, error) {
+func (r *CampaignRepository) Create(ctx context.Context, campaign *Campaign) (*Campaign, error) {
 	return nil, nil
 }
 
-func (r *CampaignRepository) Get(campaignID int32) (*Campaign, error) {
+func (r *CampaignRepository) Get(ctx context.Context, campaignID int32) (*Campaign, error) {
 	return nil, nil
 }
 
-func (r *CampaignRepository) GetWithLock(campaignID int32) (*Campaign, error) {
+func (r *CampaignRepository) GetWithLock(ctx context.Context, campaignID int32) (*Campaign, error) {
 	return nil, nil
 }
 
-func (r *CampaignRepository) Update(campaign *Campaign) (*Campaign, error) {
+func (r *CampaignRepository) Update(ctx context.Context, campaign *Campaign) (*Campaign, error) {
 	return nil, nil
 }
 
-func (r *CampaignRepository) Delete(campaignID int32) error {
+func (r *CampaignRepository) Delete(ctx context.Context, campaignID int32) error {
 	return nil
 }
 
@@ -40,10 +42,10 @@ func NewCampaignScheduleRepository(db db.DB) *CampaignScheduleRepository {
 	return &CampaignScheduleRepository{db: db}
 }
 
-func (r *CampaignScheduleRepository) Create(campaignSchedule *CampaignSchedule) (*CampaignSchedule, error) {
+func (r *CampaignScheduleRepository) Create(ctx context.Context, campaignSchedule *CampaignSchedule) (*CampaignSchedule, error) {
 	return nil, nil
 }
 
-func (r *CampaignScheduleRepository) Get(campaignScheduleID int32) (*CampaignSchedule, error) {
+func (r *CampaignScheduleRepository) Get(ctx context.Context, campaignScheduleID int32) (*CampaignSchedule, error) {
 	return nil, nil
 }

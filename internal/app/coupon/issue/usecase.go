@@ -30,7 +30,7 @@ func New(db *pgxpool.Pool) *IssueCouponUC {
 	return &IssueCouponUC{db: db}
 }
 
-func (uc *IssueCouponUC) Execute(input Input) (output *Output, err error) {
+func (uc *IssueCouponUC) Execute(ctx context.Context, input Input) (output *Output, err error) {
 	tx, err := uc.db.BeginTx(context.Background(), pgx.TxOptions{})
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (uc *IssueCouponUC) Execute(input Input) (output *Output, err error) {
 	campaignRepo := campaign.NewCampaignRepository(tx)
 
 	// 비관적 락을 걸면서 캠페인 조회
-	campaignModel, errCampaign := campaignRepo.GetWithLock(input.CampaignId)
+	campaignModel, errCampaign := campaignRepo.GetWithLock(ctx, input.CampaignId)
 	if errCampaign != nil {
 		return nil, errCampaign
 	}
@@ -58,13 +58,13 @@ func (uc *IssueCouponUC) Execute(input Input) (output *Output, err error) {
 	}
 
 	campaignModel.CouponRemains--
-	_, errCampaignUpdate := campaignRepo.Update(campaignModel)
+	_, errCampaignUpdate := campaignRepo.Update(ctx, campaignModel)
 	if errCampaignUpdate != nil {
 		return nil, errCampaignUpdate
 	}
 
 	couponService := coupon.NewCouponService(tx)
-	couponModel, errCoupon := couponService.IssueCoupon(input.CampaignId)
+	couponModel, errCoupon := couponService.IssueCoupon(ctx, input.CampaignId)
 	if errCoupon != nil {
 		return nil, errCoupon
 	}

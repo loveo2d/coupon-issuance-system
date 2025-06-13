@@ -1,6 +1,8 @@
 package coupon
 
 import (
+	"context"
+
 	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
 )
 
@@ -12,10 +14,10 @@ func NewCouponRepository(db db.DB) *CouponRepository {
 	return &CouponRepository{db: db}
 }
 
-func (r *CouponRepository) Create(coupon *Coupon) (*Coupon, error) {
+func (r *CouponRepository) Create(ctx context.Context, coupon *Coupon) (*Coupon, error) {
 	return nil, nil
 }
 
-func (r *CouponRepository) Get(couponID int32) (*Coupon, error) {
+func (r *CouponRepository) Get(ctx context.Context, couponID int32) (*Coupon, error) {
 	return nil, nil
 }
