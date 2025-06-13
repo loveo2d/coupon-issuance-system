@@ -13,7 +13,7 @@ type Input struct {
 type Output struct {
 	CampaignId    int32
 	Title         string
-	CouponRemains *int32
+	CouponRemains *int32 // proto 정의에서 optional이어서 참조를 전달한다. 핸들러는 이것이 참조인지 값인지 신경을 쓰지 않는다.
 	BeginAt       time.Time
 }
 
