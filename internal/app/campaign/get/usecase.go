@@ -13,7 +13,7 @@ type Input struct {
 type Output struct {
 	CampaignId    int32
 	Title         string
-	CouponRemains int32
+	CouponRemains *int32
 	BeginAt       time.Time
 }
 
