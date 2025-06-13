@@ -13,6 +13,6 @@ message GetCampaignRequest {
 message GetCampaignResponse {
     int32 campaign_id = 1;
     string title = 2;
-    int32 coupon_remains = 3;
+    optional int32 coupon_remains = 3;
     google.protobuf.Timestamp begin_at = 4;
 }
