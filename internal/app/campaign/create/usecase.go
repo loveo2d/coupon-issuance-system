@@ -30,7 +30,7 @@ func New(db *pgxpool.Pool) *CreateCampaignUC {
 	return &CreateCampaignUC{db: db}
 }
 
-func (uc *CreateCampaignUC) Execute(input Input) (output *Output, err error /* defer 롤백 처리 시 이 변수(err)를 바라본다 */) {
+func (uc *CreateCampaignUC) Execute(ctx context.Context, input Input) (output *Output, err error /* defer 롤백 처리 시 이 변수(err)를 바라본다 */) {
 	tx, err := uc.db.BeginTx(context.Background(), pgx.TxOptions{})
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (uc *CreateCampaignUC) Execute(input Input) (output *Output, err error /* d
 	campaignRepo := campaign.NewCampaignRepository(tx)
 	campaignScheduleRepo := campaign.NewCampaignScheduleRepository(tx)
 
-	campaignModel, errCampaign := campaignRepo.Create(&campaign.Campaign{
+	campaignModel, errCampaign := campaignRepo.Create(ctx, &campaign.Campaign{
 		Title:         input.Title,
 		CouponRemains: input.CouponRemains,
 		BeginAt:       input.BeginAt,
@@ -57,7 +57,7 @@ func (uc *CreateCampaignUC) Execute(input Input) (output *Output, err error /* d
 		return nil, errCampaign
 	}
 
-	_, errCampaignSchedule := campaignScheduleRepo.Create(&campaign.CampaignSchedule{
+	_, errCampaignSchedule := campaignScheduleRepo.Create(ctx, &campaign.CampaignSchedule{
 		CampaignId: campaignModel.ID,
 		Status:     "PENDING",
 		BeginAt:    campaignModel.BeginAt,

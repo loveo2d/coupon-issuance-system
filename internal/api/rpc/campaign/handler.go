@@ -25,7 +25,7 @@ func New(db *pgxpool.Pool) (string, http.Handler) {
 func (s *campaignServer) CreateCampaign(ctx context.Context, req *connect.Request[campaignpb.CreateCampaignRequest]) (*connect.Response[campaignpb.CreateCampaignResponse], error) {
 	uc := campaign_create.New(s.db)
 
-	output, err := uc.Execute(campaign_create.Input{
+	output, err := uc.Execute(ctx, campaign_create.Input{
 		Title:         req.Msg.Title,
 		CouponRemains: req.Msg.CouponRemains,
 		BeginAt:       req.Msg.BeginAt.AsTime(),
@@ -45,7 +45,7 @@ func (s *campaignServer) CreateCampaign(ctx context.Context, req *connect.Reques
 
 func (s *campaignServer) GetCampaign(ctx context.Context, req *connect.Request[campaignpb.GetCampaignRequest]) (*connect.Response[campaignpb.GetCampaignResponse], error) {
 	uc := campaign_get.New(s.db)
-	output, err := uc.Execute(campaign_get.Input{
+	output, err := uc.Execute(ctx, campaign_get.Input{
 		CampaignId: req.Msg.CampaignId,
 	})
 	if err != nil {

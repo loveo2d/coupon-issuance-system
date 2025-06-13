@@ -1,6 +1,7 @@
 package campaign_get
 
 import (
+	"context"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -28,10 +29,10 @@ func New(db *pgxpool.Pool) *GetCampaignUC {
 	}
 }
 
-func (uc *GetCampaignUC) Execute(input Input) (output *Output, err error) {
+func (uc *GetCampaignUC) Execute(ctx context.Context, input Input) (output *Output, err error) {
 	campaignRepo := campaign.NewCampaignRepository(uc.db)
 
-	campaignModel, errCampaign := campaignRepo.Get(input.CampaignId)
+	campaignModel, errCampaign := campaignRepo.Get(ctx, input.CampaignId)
 	if errCampaign != nil {
 		return nil, errCampaign
 	}
