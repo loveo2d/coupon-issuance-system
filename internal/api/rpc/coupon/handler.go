@@ -5,24 +5,35 @@ import (
 	"net/http"
 
 	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5/pgxpool"
 	couponpb "github.com/loveo2d/CouponIssuanceSystem/internal/api/proto/coupon"
 	"github.com/loveo2d/CouponIssuanceSystem/internal/api/proto/coupon/couponconnect"
+	coupon_issue "github.com/loveo2d/CouponIssuanceSystem/internal/app/coupon/issue"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type couponServer struct{}
+type couponServer struct {
+	db *pgxpool.Pool
+}
 
-func New() (string, http.Handler) {
-	server := &couponServer{}
+func New(db *pgxpool.Pool) (string, http.Handler) {
+	server := &couponServer{db: db}
 	return couponconnect.NewCouponServiceHandler(server)
 }
 
 func (s *couponServer) IssueCoupon(ctx context.Context, req *connect.Request[couponpb.IssueCouponRequest]) (*connect.Response[couponpb.IssueCouponResponse], error) {
+	uc := coupon_issue.New(s.db)
+	output, err := uc.Execute(coupon_issue.Input{
+		CampaignId: req.Msg.CampaignId,
+	})
+	if err != nil {
+		return nil, err
+	}
 	res := connect.NewResponse(&couponpb.IssueCouponResponse{
-		CouponId:   101,
-		CampaignId: 1,
-		CouponCode: "가123456789",
-		IssuedAt:   timestamppb.Now(),
+		CouponId:   output.CouponId,
+		CampaignId: output.CampaignId,
+		CouponCode: output.CouponCode,
+		IssuedAt:   timestamppb.New(output.IssuedAt),
 	})
 	return res, nil
 }
