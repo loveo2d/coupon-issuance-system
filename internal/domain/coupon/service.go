@@ -1,15 +1,15 @@
 package coupon
 
 import (
-	"github.com/jackc/pgx/v5"
+	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
 )
 
 type CouponService struct {
-	tx pgx.Tx
+	db db.DB
 }
 
-func NewCouponService(tx pgx.Tx) *CouponService {
-	return &CouponService{tx: tx}
+func NewCouponService(db db.DB) *CouponService {
+	return &CouponService{db: db}
 }
 
 func (s *CouponService) IssueCoupon(campaignId int32) (*Coupon, error) {

@@ -1,13 +1,15 @@
 package campaign
 
-import "github.com/jackc/pgx/v5"
+import (
+	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
+)
 
 type CampaignRepository struct {
-	tx pgx.Tx
+	db db.DB
 }
 
-func NewCampaignRepository(tx pgx.Tx) *CampaignRepository {
-	return &CampaignRepository{tx: tx}
+func NewCampaignRepository(db db.DB) *CampaignRepository {
+	return &CampaignRepository{db: db}
 }
 
 func (r *CampaignRepository) Create(campaign *Campaign) (*Campaign, error) {
@@ -31,11 +33,11 @@ func (r *CampaignRepository) Delete(campaignID int32) error {
 }
 
 type CampaignScheduleRepository struct {
-	tx pgx.Tx
+	db db.DB
 }
 
-func NewCampaignScheduleRepository(tx pgx.Tx) *CampaignScheduleRepository {
-	return &CampaignScheduleRepository{tx: tx}
+func NewCampaignScheduleRepository(db db.DB) *CampaignScheduleRepository {
+	return &CampaignScheduleRepository{db: db}
 }
 
 func (r *CampaignScheduleRepository) Create(campaignSchedule *CampaignSchedule) (*CampaignSchedule, error) {
