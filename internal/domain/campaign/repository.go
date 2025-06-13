@@ -6,6 +6,14 @@ import (
 	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
 )
 
+type Repository interface {
+	Create(ctx context.Context, campaign *Campaign) (*Campaign, error)
+	Get(ctx context.Context, id int32) (*Campaign, error)
+	GetWithLock(ctx context.Context, id int32) (*Campaign, error)
+	Update(ctx context.Context, c *Campaign) (*Campaign, error)
+	Delete(ctx context.Context, id int32) error
+}
+
 type CampaignRepository struct {
 	db db.DB
 }
