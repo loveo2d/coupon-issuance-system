@@ -31,7 +31,7 @@ func New(db *pgxpool.Pool) *GetCampaignUC {
 }
 
 func (uc *GetCampaignUC) Execute(input Input) (output *Output, err error) {
-	tx, err := uc.db.BeginTx(context.Background(), pgx.TxOptions{})
+	tx, err := uc.db.BeginTx(context.Background(), pgx.TxOptions{AccessMode: pgx.ReadOnly})
 	if err != nil {
 		return nil, err
 	}
