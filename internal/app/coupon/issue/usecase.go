@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/loveo2d/CouponIssuanceSystem/internal/domain/campaign"
 	"github.com/loveo2d/CouponIssuanceSystem/internal/domain/coupon"
 	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
@@ -23,16 +22,20 @@ type Output struct {
 	IssuedAt   time.Time
 }
 
+type Transactor interface {
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
+}
+
 type campaignRepoFactory func(q db.DB) campaign.Repository
 type couponServiceFactory func(q db.DB) coupon.Service
 
 type IssueCouponUC struct {
-	db                   *pgxpool.Pool
+	db                   Transactor
 	campaignRepoFactory  campaignRepoFactory
 	couponServiceFactory couponServiceFactory
 }
 
-func New(db *pgxpool.Pool, campaignRepoFactory campaignRepoFactory, couponServiceFactory couponServiceFactory) *IssueCouponUC {
+func New(db Transactor, campaignRepoFactory campaignRepoFactory, couponServiceFactory couponServiceFactory) *IssueCouponUC {
 	return &IssueCouponUC{
 		db:                   db,
 		campaignRepoFactory:  campaignRepoFactory,
