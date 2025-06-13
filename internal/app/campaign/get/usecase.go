@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/loveo2d/CouponIssuanceSystem/internal/domain/campaign"
 )
 
 type Input struct {
@@ -27,6 +28,19 @@ func New(db *pgxpool.Pool) *GetCampaignUC {
 	}
 }
 
-func (uc *GetCampaignUC) Execute(input Input) (*Output, error) {
-	return &Output{}, nil
+func (uc *GetCampaignUC) Execute(input Input) (output *Output, err error) {
+	campaignRepo := campaign.NewCampaignRepository(uc.db)
+
+	campaignModel, errCampaign := campaignRepo.Get(input.CampaignId)
+	if errCampaign != nil {
+		return nil, errCampaign
+	}
+
+	output = &Output{
+		CampaignId:    campaignModel.ID,
+		Title:         campaignModel.Title,
+		CouponRemains: &campaignModel.CouponRemains,
+		BeginAt:       campaignModel.BeginAt,
+	}
+	return output, nil
 }

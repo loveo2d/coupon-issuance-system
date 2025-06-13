@@ -336,6 +336,23 @@ message GetCampaignResponse {
 ### 4.3 유스케이스 작성하기
 이제 실제 비즈니스 로직이 들어가는 유스케이스를 작성해야 한다. 작업 순서는 역시 탑다운 원칙에 따라 하위계층(리포지토리, 도메인서비스 등)은 명세만 작성하고 유스케이스 부터 작성한다.
 
+#### 4.3.1 시퀀스다이어그램에 맞춰 유스케이스 작성하기
+여기서 부터는 편하게 작성할 수 있겠다는 생각이 들었다. 먼저 리포지토리, 도메인서비스, 엔티티에 대한 명세를 작성하고, 미리 작성해둔 시퀀스다이어그램을 보고 순서에 따라 작성만 하면 된다. 특이사항으로는 유스케이스는 생성 시 `pgxpool.Pool`를 받고, 하위 계층은 유스케이스에서 생성한 `pgx.Tx`를 받도록 했다. 근데 이러면 반드시 트랜잭션을 사용하지 않아도 되는 `GetCampaignUC` 유스케이스가 소외되어 버린다. 어떻게 해결해야 할지 고민하다가 잠시 트랜잭션을 열기도 해보고 트랜잭션을 읽기 전용으로 바꿔도 봤지만, 이런 부분이 추상화가 필요한 부분이라는 생각이 들어 리포지토리나 도메인서비스에서 사용할 수 있는 `pgxpool.Pool`과 `pgx.Tx`의 공통점을 인터페이스화 해서 리포지토리와 도메인서비스가 이 인터페이스를 받도록 설계해 보기로 했다. 마침 [여기](https://github.com/jackc/pgx/issues/644)에서 괜찮은 샘플을 발견해서 프로젝트 구성에 맞게 적용해 보기로 했다.
+
+```go
+package db
+
+...
+
+type DB interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+```
+
+이렇게 인터페이스를 만들고 리포지토리와 도메인서비스에서 `pgx.Tx`를 받는 부분을 `db.DB`로 변경했다. 다행히 문법 오류는 나타나지 않았다. 이러면 `pgxpool.Pool` 자체를 입력해도, `pgxpool.Pool`에서 트랜잭션 생성을 통해 반환된 `pgx.Tx`를 입력해도 정상적으로 동작할 것이다.
+
 ## 5. 실행 방법
 
 ## 6. 향후 개선 과제
