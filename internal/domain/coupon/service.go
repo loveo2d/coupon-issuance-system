@@ -9,6 +9,9 @@ import (
 	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
 )
 
+type Service interface {
+	IssueCoupon(ctx context.Context, campaignId int32) (*Coupon, error)
+}
 type CouponService struct {
 	db db.DB
 }

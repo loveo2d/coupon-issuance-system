@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/loveo2d/CouponIssuanceSystem/internal/domain/campaign"
 	"github.com/loveo2d/CouponIssuanceSystem/internal/domain/coupon"
+	"github.com/loveo2d/CouponIssuanceSystem/internal/infra/db"
 )
 
 type Input struct {
@@ -22,12 +22,25 @@ type Output struct {
 	IssuedAt   time.Time
 }
 
-type IssueCouponUC struct {
-	db *pgxpool.Pool
+type Transactor interface {
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
-func New(db *pgxpool.Pool) *IssueCouponUC {
-	return &IssueCouponUC{db: db}
+type campaignRepoFactory func(q db.DB) campaign.Repository
+type couponServiceFactory func(q db.DB) coupon.Service
+
+type IssueCouponUC struct {
+	db                   Transactor
+	campaignRepoFactory  campaignRepoFactory
+	couponServiceFactory couponServiceFactory
+}
+
+func New(db Transactor, campaignRepoFactory campaignRepoFactory, couponServiceFactory couponServiceFactory) *IssueCouponUC {
+	return &IssueCouponUC{
+		db:                   db,
+		campaignRepoFactory:  campaignRepoFactory,
+		couponServiceFactory: couponServiceFactory,
+	}
 }
 
 func (uc *IssueCouponUC) Execute(ctx context.Context, input Input) (output *Output, err error) {
@@ -41,7 +54,7 @@ func (uc *IssueCouponUC) Execute(ctx context.Context, input Input) (output *Outp
 		}
 	}()
 
-	campaignRepo := campaign.NewCampaignRepository(tx)
+	campaignRepo := uc.campaignRepoFactory(tx)
 
 	// 비관적 락을 걸면서 캠페인 조회
 	campaignModel, errCampaign := campaignRepo.GetWithLock(ctx, input.CampaignId)
@@ -63,7 +76,7 @@ func (uc *IssueCouponUC) Execute(ctx context.Context, input Input) (output *Outp
 		return nil, errCampaignUpdate
 	}
 
-	couponService := coupon.NewCouponService(tx)
+	couponService := uc.couponServiceFactory(tx)
 	couponModel, errCoupon := couponService.IssueCoupon(ctx, input.CampaignId)
 	if errCoupon != nil {
 		return nil, errCoupon
