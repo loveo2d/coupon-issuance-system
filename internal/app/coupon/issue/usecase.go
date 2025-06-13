@@ -7,13 +7,13 @@ import (
 )
 
 type Input struct {
-	CampaignID int32
+	CampaignId int32
 }
 
 type Output struct {
-	CouponID   int64
+	CouponId   int64
 	CouponCode string
-	CampaignID int32
+	CampaignId int32
 	IssuedAt   time.Time
 }
 

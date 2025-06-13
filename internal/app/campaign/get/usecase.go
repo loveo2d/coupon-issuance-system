@@ -7,7 +7,7 @@ import (
 )
 
 type Input struct {
-	CampaignID int32
+	CampaignId int32
 }
 
 type Output struct {
