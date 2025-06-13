@@ -19,19 +19,20 @@ func New() (string, http.Handler) {
 
 func (s *campaignServer) CreateCampaign(ctx context.Context, req *connect.Request[campaignpb.CreateCampaignRequest]) (*connect.Response[campaignpb.CreateCampaignResponse], error) {
 	res := connect.NewResponse(&campaignpb.CreateCampaignResponse{
-		CampaignId:    0,
-		Title:         "",
-		CouponRemains: 0,
+		CampaignId:    1,
+		Title:         "캠페인 테스트",
+		CouponRemains: 10,
 		BeginAt:       timestamppb.Now(),
 	})
 	return res, nil
 }
 
 func (s *campaignServer) GetCampaign(ctx context.Context, req *connect.Request[campaignpb.GetCampaignRequest]) (*connect.Response[campaignpb.GetCampaignResponse], error) {
+	var couponRemains int32 = 0
 	res := connect.NewResponse(&campaignpb.GetCampaignResponse{
-		CampaignId:    0,
-		Title:         "",
-		CouponRemains: 0,
+		CampaignId:    1,
+		Title:         "캠페인 테스트",
+		CouponRemains: &couponRemains,
 		BeginAt:       timestamppb.Now(),
 	})
 	return res, nil

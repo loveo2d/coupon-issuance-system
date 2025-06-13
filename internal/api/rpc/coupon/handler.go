@@ -19,8 +19,8 @@ func New() (string, http.Handler) {
 
 func (s *couponServer) IssueCoupon(ctx context.Context, req *connect.Request[couponpb.IssueCouponRequest]) (*connect.Response[couponpb.IssueCouponResponse], error) {
 	res := connect.NewResponse(&couponpb.IssueCouponResponse{
-		CouponId:   0,
-		CampaignId: 0,
+		CouponId:   101,
+		CampaignId: 1,
 		CouponCode: "가123456789",
 		IssuedAt:   timestamppb.Now(),
 	})
