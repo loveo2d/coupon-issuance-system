@@ -269,6 +269,69 @@ internal/api/proto
 
 이렇게 성공적으로 `.proto` 명세에 대응하는 파일들이 생성됐다.
 
+### 4.2. 엔드포인트 구현하기
+`connectrpc`를 사용하기 위한 사전 명세와 컴파일된 명세 파일들 까지 준비됐으니 이제 엔드포인트를 구현할 차례다. 아무래도 일반적인 `REST API` 엔드포인트와는 같은 프로토콜을 쓸 수 있게 지원한다 하더라도 구현 자체는 결이 다를 것으로 예상된다.
+
+#### 4.2.1. `connectrpc` proto 정의 handler에 매핑하기
+`buf`가 편하게 명세와 Request/Response에 해당하는 DTO까지 구성해 줬으니 DTO를 구성하기 위해 만든 `rpc/{domain}/schemas.go` 파일은 모두 삭제하고, 명세에 맞게 작성만 하면 되는데 사소한 문제가 생겼다. proto 파일은 서비스 핸들러를 자동으로 생성해 주는데, 이 서비스 핸들러 정의를 `.proto` 파일 단위로 작성하니 서비스 핸들러가 도메인 단위가 아니라 종단점 단위로 분리되어버린 거다. 따라서 서비스 핸들러를 하나로 합칠 방법이 필요했는데, `.proto` 파일은 작성된 내용을 다른 `.proto` 파일로 import가 가능했다. 이 방법을 이용해서 서비스에 관련된 `.proto` 파일을 별도의 파일로 분리했다.
+
+```
+proto
+├── campaign
+│   ├── create.proto
+│   ├── get.proto
+│   └── service.proto
+└── coupon
+    ├── issue.proto
+    └── service.proto
+```
+coupon 도메인의 issue.proto는 그대로 사용해도 문제는 없지만 맥락상 `.proto`파일 관리의 일관성 차원에서 분리했다. 이후 rpc/main.go 에서 이 핸들러 패키지에서 New() 메소드를 통해 `connectrpc` 핸들러를 가져오기만 하면 된다. 그럼 서비스를 `go run cmd/rpc/main.go` 명령어로 실행하고 요청을 보내보자.
+
+> 2025/06/13 14:18:44 Starting server on port 8000 \
+Routing services to: \
+\-  /rpc_campaign.CampaignService/ \
+\-  /rpc_coupon.CouponService/
+
+여기서 각 도메인의 루트경로를 알 수 있고, 해당 도메인의 기능들은 `.proto`에서 정의한 명칭을 그대로 사용하면 된다. 그럼 모든 엔드포인트를 나열하면 아래와 같다.
+
+- /rpc_campaign.CampaignService/CreateCampaign
+- /rpc_campaign.CampaignService/GetCampaign
+- /rpc_coupon.CouponService/IssueCoupon
+
+라우팅에 성공한 것 같으니 브라우저에서 한 번 접속해 보기로 했다. `http://127.0.0.1:8000/rpc_campaign.CampaignService/CreateCampaign` 페이지에 접속해 봤고, 결과는 `HTTP ERROR 405` 라는 에러 메시지였다. 웹브라우저로 접근 시 Get 메소드로 접근하는데, 이 Get 메소드는 제공되지 않는다는 의미일 것이다. 찾아 보니, `connectrpc`는 POST 요청만 받아서 처리한다고 한다. curl로 테스트 해보기로 했다.
+
+> ✗ curl -X POST  -H "Content-Type: application/json" -d {} http://127.0.0.1:8000/rpc_campaign.CampaignService/CreateCampaign \
+{"beginAt":"2025-06-13T05:22:55.182708Z"}
+
+이상했다. 난 분명 `{CampaignId: 0, Title: "", CouponRemains: 0, BeginAt: timestamppb.Now()}` 로 잘 설정했는데 `beginAt`만 반환되는 게 아닌가? 하지만 대충 봐도 표현되지 않은 값들은 하나같이 의미있는 값을 갖지 않는 필드들이었다. 엔드포인트 더미 데이터에 숫자형은 0, 문자형은 ""(빈 문자열)을 설정했는데, 이것들은 보통 데이터가 없다고 볼 수 있는 항목들이다. 제대로 데이터를 확인하려면 의미있는 값을 부여해야 할 것으로 보여서 해당 값들을 수정 후 다시 요청했다.
+
+> ✗ curl -X POST  -H "Content-Type: application/json" -d {} http://127.0.0.1:8000/rpc_campaign.CampaignService/CreateCampaign \
+{"campaignId":1, "title":"캠페인 테스트", "couponRemains":10, "beginAt":"2025-06-13T05:25:50.944314Z"}
+
+이제는 잘 나왔다. 하지만 `CreateCampaign`에선 반환 시 0이나 빈 문자열이 표현되는 케이스가 없겠지만 `GetCampaign`의 경우 쿠폰이 모두 소진될 경우 0이 반환될 수 있다. 위에서 찾은 문제에 대한 궁금증과 함께 이 부분에 대한 해결책을 찾아야 했다. 그래서 문서를 참조해 보니, protobuf의 기본 동작으로 `optional` 키워드가 설정되지 않은 구조체 필드는 0이나 "" 과 같은 빈 데이터로 간주되는 정보를 직렬화 시 삭제한다고 한다. 그럼 빈 값으로 간주될 수 있는 값들에 대해 optional을 설정해야 하니 proto 파일을 다시 수정해야 한다.
+
+```proto
+message GetCampaignResponse {
+    int32 campaign_id = 1;
+    string title = 2;
+    optional int32 coupon_remains = 3;
+    google.protobuf.Timestamp begin_at = 4;
+}
+```
+
+그럼 다음과 같이 정상적으로 0을 값으로 가진 필드도 직렬화 시 삭제되지 않고 남아있다.
+
+> ✗ curl -X POST  -H "Content-Type: application/json" -d {} http://127.0.0.1:8000/rpc_campaign.CampaignService/GetCampaign \
+{"campaignId":1,"title":"캠페인 테스트","couponRemains":0,"beginAt":"2025-06-13T05:35:14.725740Z"}
+
+여담이지만 기존에 사용하던 하이레벨 언어에서는 레퍼런스나 포인터 같은 개념이 없었는데, 위의 CouponRemains에 optional을 추가하자마자 요구 타입이 int32가 아닌 *int32가 되었다. 왜 이런 변화가 생겼는지 생각해 봤는데, 보통 매개변수로 값을 넘기면 Go와 같은 로우레벨 수준을 제어할 수 있는 언어는 주소가 아닌 값을 복제하는 것으로 알고 있다. 따라서 int32라는 엄격한 타입을 준수해야 하는데, 아예 데이터와 타입이 없는 nil 같은 경우 int32로 복제할 수 없기 때문에 댕글링 포인터로서의 nil도 표현할 수 있도록 레퍼런스를 넘기도록 설계된게 아닐까 싶었다.
+
+#### 4.2.2. handler에 대응되는 유스케이스 연결하기
+이제 위에서 구성한 시퀀스 다이어그램 대로 로직을 구성하면 된다. 종단점이 총 세개니까 유스케이스도 거기에 맞춰 작성해 준다 (스케줄에 따른 트래픽 발생에 대한 유스케이스는 나중에 작성하기로 한다). 각 코드에서 생긴 의문점에 대한 의사결정은 주석처리로 일부분 설명했지만, 의미있는 고민들을 적어내려가기로 했다.
+
+먼저, 의존성주입을 통한 생명주기 관리를 어떻게 할지에 대해서였는데, 다른 OOP 언어와는 다르게 Go의 구조체는 애초에 할당이라는 개념이 없고, New라는 명시적인 함수를 통해 구조체를 생성할 뿐 비용이 비교적 저렴하다는 것이었다. 단, DB의 경우는 상황이 다른데 이건 메모리에 할당하는 차원을 떠나서 DB를 여닫는 행위 자체에 트레이드오프가 있기 때문이다. 따라서 JVM 기반 언어에서 사용하는 의존성주입은 필수가 아니지만 비용이 큰 DB 연결의 케이스에만 의존성주입과 유사한 구조를 만들기로 했다.
+
+그리고 핸들러에서 proto 인터페이스로 값을 반환하도록 Response 구조체를 생성할 때 이 값이 참조냐 아니냐를 핸들러가 꼭 알아야 할까? 하는 의문이 있었다. 단일 책임의 원칙에서 벗어나는 것 같아서 유스케이스의 Input/Output에 책임을 모두 위임하기로 했다. 왜냐하면 유스케이스는 마찬가지로 필요한 경우 nil을 반환할 수 있고, 종단점이 요구하는 값과 유스케이스에서 반환하는 값을 핸들러에서 참조냐 값이냐를 컨트롤하도록 구성하는 건 실수를 유발하기 쉬울 것 같았기 때문이다. 그래도 유스케이스가 종단점의 명세를 알아야 하냐는 의문은 여전히 남아 있다. 이 부분은 정답이 없을 것 같아 하나의 컨벤션으로 두기로 했다.
 
 ## 5. 실행 방법
 
