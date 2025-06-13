@@ -1,10 +1,8 @@
 package campaign_get
 
 import (
-	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/loveo2d/CouponIssuanceSystem/internal/domain/campaign"
 )
@@ -31,17 +29,7 @@ func New(db *pgxpool.Pool) *GetCampaignUC {
 }
 
 func (uc *GetCampaignUC) Execute(input Input) (output *Output, err error) {
-	tx, err := uc.db.BeginTx(context.Background(), pgx.TxOptions{AccessMode: pgx.ReadOnly})
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err != nil {
-			tx.Rollback(context.Background())
-		}
-	}()
-
-	campaignRepo := campaign.NewCampaignRepository(tx)
+	campaignRepo := campaign.NewCampaignRepository(uc.db)
 
 	campaignModel, errCampaign := campaignRepo.Get(input.CampaignId)
 	if errCampaign != nil {
